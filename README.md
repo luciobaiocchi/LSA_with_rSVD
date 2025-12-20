@@ -10,13 +10,18 @@ This project demonstrates how to extract latent concepts from a large text corpu
 * **Preprocessing:** Advanced tokenization including **Snowball Stemming** and custom stop-word filtering.
 * **Algorithm:** Custom rSVD implementation featuring **Power Iterations** to enhance singular value approximation.
 * **Analysis:** Automated search for the optimal number of clusters using the **Silhouette Score**.
-* **Visualization:** Generation of horizontal bar plots showing the most relevant keywords for each identified cluster.
+* **Visualization:** 
+    * **CLI**: Horizontal bar plots (Matplotlib).
+    * **GUI**: Interactive charts (Plotly) and Semantic Search engine.
 
 ## 📂 Repository Structure
-* `test.py`: The main script handling the end-to-end pipeline: data loading, rSVD, clustering, and visualization.
+* `cli.py`: Command Line Interface for the pipeline (data loading, rSVD, clustering, visualization).
+* `gui.py`: Streamlit Web Interface for interactive exploration and search.
+* `semantic_engine.py`: Core logic for the semantic search engine and model management.
 * `stemming.py`: Logic for text preprocessing and NLTK-based tokenization.
-* `utils.py`: Helper functions for clustering metrics, specifically the Silhouette Score analysis.
-* `constants.py`: Centralized management of the global random seed for reproducibility.
+* `utils.py`: Helper functions for clustering metrics (Silhouette Score) and plotting.
+* `functions.py`: Implementation of the rSVD algorithm.
+* `constants.py`: Global constants (random seed).
 
 ## 🛠️ Requirements
 The project requires the following Python libraries:
@@ -24,6 +29,43 @@ The project requires the following Python libraries:
 * `matplotlib`
 * `scikit-learn`
 * `nltk`
+* `streamlit` (for GUI)
+* `plotly` (for GUI)
+
+Install them via pip:
+```bash
+pip install numpy matplotlib scikit-learn nltk streamlit plotly
+```
+
+## 💻 Usage
+
+### 1. Graphical User Interface (GUI) - **Recommended**
+The GUI provides a modern, interactive experience to search the dataset and visualize clusters dynamically.
+
+**How to run:**
+```bash
+streamlit run gui.py
+```
+> **Note:** Do not run with `python gui.py`. Use the `streamlit run` command.
+
+**Features:**
+* **Semantic Search:** Type queries (e.g., "space", "graphics") to find relevant documents.
+* **Interactive Visualization:** Explore cluster keywords with Plotly charts.
+* **Dataset Preview:** Browse raw documents.
+
+### 2. Command Line Interface (CLI)
+The CLI runs the full pipeline, performs benchmarks, and generates static plots.
+
+**How to run:**
+```bash
+python cli.py
+```
+
+**Workflow:**
+1.  Loads/Downloads the dataset.
+2.  Trains the model (TF-IDF + rSVD + K-Means).
+3.  Displays clustering analysis and generated keywords.
+4.  Enters an interactive loop where you can input search queries directly in the terminal.
 
 ## ⚙️ Technical Details
 
@@ -31,23 +73,16 @@ The project requires the following Python libraries:
 To focus on semantic content, the pipeline:
 1.  Removes **headers, footers, and quotes** from the original posts.
 2.  Applies **Snowball Stemming** to both the documents and the stop-words list.
-3.  Uses `TfidfVectorizer` limited to the top 10,000 features.
+3.  Uses `TfidfVectorizer` limited to the top 15,000 features.
 
 ### The rSVD Algorithm
-The implementation in `test.py` follows a probabilistic approach for matrix decomposition with the following default parameters:
+The implementation in `functions.py` follows a probabilistic approach for matrix decomposition:
 * `k = 50`: Target dimensions.
 * `p = 20`: Oversampling parameter.
-* `q = 10`: Power iterations to handle noise.
+* `q = 2`: Power iterations to handle noise (optimized for speed).
 
 ### Clustering Workflow
 After projecting documents into the reduced space ($U_r$):
 * Vectors are normalized to unit length.
-* An automated scan identifies the **Best K** (between 5 and 10) based on the Silhouette Score.
+* An automated scan identifies the **Best K** based on the Silhouette Score.
 * Final labels are assigned using **K-Means** clustering.
-
-## 📊 Expected Output
-Running `test.py` will generate:
-1.  **Sparsity Logs:** Details about the TF-IDF matrix density.
-2.  **Performance Benchmark:** Time taken by the rSVD for decomposition.
-3.  **Silhouette Plot:** A visual report to justify the chosen number of clusters.
-4.  **Cluster Barplots:** A grid of charts displaying the top 6 representative words for each discovered topic

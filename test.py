@@ -6,12 +6,12 @@ from sklearn.feature_extraction.text import TfidfVectorizer, ENGLISH_STOP_WORDS
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import normalize
 from stemming import stemmer, stemmed_tokenizer
+from functions import rSVD
+from utils import analizza_miglior_k, plot_clusters_barchart
 
 # --- CONFIGURAZIONE RIPRODUCIBILITÀ ---
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
-
-
 
 # 1. PREPARAZIONE DATI
 print("Caricamento dati...")
@@ -50,30 +50,15 @@ A = vectorizer.fit_transform(data.data)
 print(f"Dimensione matrice: {A.shape} (Documenti x Parole)")
 print(f"Sparsità: {A.nnz / (A.shape[0] * A.shape[1]):.4%}")
 
-def rSVD(X, k, p=10, q=2):
-    m, n = X.shape
-    Omega = np.random.normal(size=(n, k + p)) # Controllato da seed globale
-    Y = X @ Omega
-    for _ in range(q):
-        Y = X @ (X.T @ Y)
-    Q, _ = np.linalg.qr(Y)
-    B = Q.T @ X
-    U_hat, Sigma, Vt = np.linalg.svd(B, full_matrices=False)
-    U = Q @ U_hat
-    return U[:, :k], Sigma[:k], Vt[:k, :]
-
 # 3. BENCHMARK
 k = 50
 print(f"\nEsecuzione rSVD per k={k}...")
-
-# --- Metodo Randomizzato (rSVD) ---
-start = time.time()
-
 
 # U_r (18.846 , 50) Le coordinate di ogni documento nello spazio ridotto a 50 dimensioni
 # S_r (50, 1) La Forza dei Concetti
 # Vt_r (50, 10.000) La Riga 0 (Topic 1) ti dice quali parole compongono quel topic.
 
+start = time.time()
 U_r, S_r, Vt_r = rSVD(A, k=k, p=20, q=10)
 time_random = time.time() - start
 print(f"Tempo rSVD: {time_random:.4f} s")
@@ -97,46 +82,7 @@ labels = kmeans.fit_predict(X_reduced)
 original_space_centroids = kmeans.cluster_centers_ @ Vt_r
 
 # --- NUOVA SEZIONE: VISUALIZZAZIONE BARPLOT ---
-print("\n--- Visualizzazione Parole Chiave per Cluster (Barplots) ---")
 
-def plot_clusters_barchart(centroids, feature_names, n_top_words=6):
-    n_clusters = centroids.shape[0]
-
-    # Calcoliamo righe e colonne per la griglia di grafici
-    n_cols = 2
-    n_rows = int(np.ceil(n_clusters / n_cols))
-
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 3.5 * n_rows), constrained_layout=True)
-    axes = axes.flatten() # Appiattiamo per iterare facilmente
-
-    # Colormap per dare colori diversi ai cluster
-    colors = plt.cm.tab10(np.linspace(0, 1, n_clusters))
-
-    for i in range(n_clusters):
-        ax = axes[i]
-
-        # Estrazione top words e pesi
-        # argsort ordina crescente, prendiamo gli ultimi n_top_words e invertiamo
-        top_indices = centroids[i].argsort()[-n_top_words:]
-        top_words = [feature_names[j] for j in top_indices]
-        top_weights = centroids[i][top_indices]
-
-        # Creazione Barplot Orizzontale
-        # Usiamo i dati così come sono (dal meno importante al più importante) per barh
-        ax.barh(top_words, top_weights, color=colors[i % 10], alpha=0.8)
-
-        ax.set_title(f"CLUSTER {i}", fontsize=12, fontweight='bold', color='black')
-        ax.set_xlabel("Peso (Importanza)")
-        ax.grid(axis='x', linestyle='--', alpha=0.5)
-
-    # Nascondiamo eventuali subplot vuoti (se n_clusters è dispari)
-    for i in range(n_clusters, len(axes)):
-        axes[i].axis('off')
-
-    plt.suptitle(f"Parole Chiave Top {n_top_words} per Cluster", fontsize=16, y=1.02)
-    plt.show()
-
-# Chiamata alla funzione di visualizzazione
 plot_clusters_barchart(original_space_centroids, feature_names)
 
 # Stampa esempi testuali (per verifica rapida contenuto)
@@ -146,5 +92,3 @@ for i in range(best_n):
     if len(docs_in_cluster) > 0:
         preview = data.data[docs_in_cluster[0]][:80].replace('\n', ' ')
         print(f"Cluster {i} Sample: {preview}...")
-
-

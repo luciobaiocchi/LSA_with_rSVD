@@ -86,3 +86,7 @@ After projecting documents into the reduced space ($U_r$):
 * Vectors are normalized to unit length.
 * An automated scan identifies the **Best K** based on the Silhouette Score.
 * Final labels are assigned using **K-Means** clustering.
+
+
+## Live demo on this link
+https://lsa-rsvd.streamlit.app/

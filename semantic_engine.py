@@ -5,6 +5,8 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import normalize
 from sklearn.metrics.pairwise import cosine_similarity
 from stemming import stemmed_tokenizer, stemmer
+from utils import plot_clusters_barchart
+
 
 class SemanticEngine:
     def __init__(self, n_topics=50, n_clusters=10):
@@ -62,6 +64,11 @@ class SemanticEngine:
         feature_names = self.vectorizer.get_feature_names_out()
         top_indices = original_space_centroid.argsort()[-n_words:][::-1]
         return [feature_names[i] for i in top_indices]
+    
+    def plot_barchart_clusters(self):
+        feature_names = self.vectorizer.get_feature_names_out()
+        original_space_centroids = self.kmeans.cluster_centers_ @ self.Vt
+        plot_clusters_barchart(original_space_centroids, feature_names)
 
     def search(self, query, top_k=5):
         """Motore di ricerca semantico."""

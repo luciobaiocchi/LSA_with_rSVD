@@ -32,7 +32,7 @@ def plot_clusters_barchart(centroids, feature_names, n_top_words=6):
         ax.barh(top_words, top_weights, color=colors[i % 10], alpha=0.8)
 
         ax.set_title(f"CLUSTER {i}", fontsize=12, fontweight='bold', color='black')
-        ax.set_xlabel("Peso (Importanza)")
+        ax.set_xlabel("Weight")
         ax.grid(axis='x', linestyle='--', alpha=0.5)
 
     # Nascondiamo eventuali subplot vuoti (se n_clusters è dispari)

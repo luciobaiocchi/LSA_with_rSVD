@@ -6,10 +6,13 @@ from sklearn.preprocessing import normalize
 from sklearn.metrics.pairwise import cosine_similarity
 from stemming import stemmed_tokenizer, stemmer
 from utils import plot_clusters_barchart
+from functions import rSVD 
 
 
 class SemanticEngine:
     def __init__(self, n_topics=50, n_clusters=10):
+        RANDOM_SEED = 42
+        np.random.seed(RANDOM_SEED)
         self.n_topics = n_topics
         self.n_clusters = n_clusters
         self.vectorizer = None
@@ -42,8 +45,6 @@ class SemanticEngine:
         A = self.vectorizer.fit_transform(data)
         
         print("2. Decomposizione rSVD...")
-        # Importiamo rSVD qui o usiamo self se la integri nella classe
-        from functions import rSVD 
         self.U, _, self.Vt = rSVD(A, k=self.n_topics)
         
         # Normalizzazione per similarità coseno
